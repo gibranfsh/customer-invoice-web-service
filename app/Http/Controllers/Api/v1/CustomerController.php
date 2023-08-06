@@ -60,6 +60,8 @@ class CustomerController extends Controller
     public function update(UpdateCustomerRequest $request, Customer $customer)
     {
         $customer->update($request->all());
+
+        return new CustomerResource($customer);
     }
 
     /**
@@ -67,6 +69,8 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
-        //
+        $customer->delete();
+
+        return response()->json(['message' => 'Customer successfully deleted.'], 204);
     }
 }
