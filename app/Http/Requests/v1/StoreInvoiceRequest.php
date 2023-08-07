@@ -3,6 +3,7 @@
 namespace App\Http\Requests\v1;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreInvoiceRequest extends FormRequest
 {
@@ -11,7 +12,9 @@ class StoreInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $user = $this->user();
+
+        return $user !== null && $user->tokenCan('create');
     }
 
     /**
@@ -22,7 +25,11 @@ class StoreInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'customer_id' => ['required', 'exists:customers,id'],
+            'amount' => ['required', 'numeric'],
+            'status' => ['required', Rule::in(['Void', 'Billed', 'Paid'])],
+            'billedDate' => ['required', 'date'],
+            'paidDate' => ['sometimes', 'date'],
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\v1;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateInvoiceRequest extends FormRequest
 {
@@ -11,7 +12,9 @@ class UpdateInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $user = $this->user();
+
+        return $user !== null && $user->tokenCan('update');
     }
 
     /**
@@ -21,8 +24,24 @@ class UpdateInvoiceRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-        ];
+        $method = $this->method();
+
+        if ($method === 'PUT') {
+            return [
+                'customer_id' => ['required', 'exists:customers,id'],
+                'amount' => ['required', 'numeric'],
+                'status' => ['required', Rule::in(['Void', 'Billed', 'Paid'])],
+                'billedDate' => ['required', 'date'],
+                'paidDate' => ['sometimes', 'date'],
+            ];
+        } else { // assume that $method === 'PATCH'
+            return [
+                'customer_id' => ['sometimes', 'required', 'exists:customers,id'],
+                'amount' => ['sometimes', 'required', 'numeric'],
+                'status' => ['sometimes', 'required', Rule::in(['Void', 'Billed', 'Paid'])],
+                'billedDate' => ['sometimes', 'required', 'date'],
+                'paidDate' => ['sometimes', 'date'],
+            ];
+        }
     }
 }
